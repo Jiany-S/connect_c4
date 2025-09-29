@@ -5,8 +5,8 @@
 #define COLS 7
 
 typedef enum Cell {
-    _, X, O
-} Cell; // _ is an empty cell, X is player 1, O is player 2
+    ., A, B
+} Cell; // . is an empty cell, A is player 1, B is player 2
 
 typedef Cell Board[ROWS][COLS];
 
