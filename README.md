@@ -97,6 +97,7 @@ When the VM boots, the game is configured to launch automatically.
 ## Testing & Debugging
 The project was tested with a combination of unit test files and manual playthroughs.  
 Debugging was done using **GDB**, and **Valgrind** was used to check for memory errors and leaks.
+Both tools returned great results, confirming the program runs reliably.
 
 ---
 
