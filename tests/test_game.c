@@ -21,7 +21,7 @@ int main() {
     dropChecker(b, 0, PLAYER_A);
     dropChecker(b, 1, PLAYER_B); dropChecker(b, 1, PLAYER_A);
     dropChecker(b, 2, PLAYER_B); dropChecker(b, 2, PLAYER_B); dropChecker(b, 2, PLAYER_A);
-    dropChecker(b, 3); dropChecker(b, 3); dropChecker(b, 3); dropChecker(b, 3, PLAYER_A);
+    dropChecker(b, 3, PLAYER_B); dropChecker(b, 3, PLAYER_B); dropChecker(b, 3, PLAYER_B); dropChecker(b, 3, PLAYER_A);
     assert(checkWin(b, PLAYER_A) == 1);
 
     printf("test_game PASSED\n");
