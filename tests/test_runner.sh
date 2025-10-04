@@ -11,4 +11,3 @@ echo "🔹 Running unit tests..."
 ./build/test_game
 
 echo "✅ All unit tests passed."
-EOF
