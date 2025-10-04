@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/bin/sh
 set -e
 mkdir -p build
 
@@ -10,4 +10,5 @@ echo "🔹 Running unit tests..."
 ./build/test_board
 ./build/test_game
 
-echo "All unit tests passed."
+echo "✅ All unit tests passed."
+EOF
