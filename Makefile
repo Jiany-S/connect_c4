@@ -21,13 +21,13 @@ run: $(TARGET)
 	./$(TARGET)
 
 test: $(TARGET)
-	./tests/test_runner.sh $(TARGET)
+	./tests/test_runner.sh
 
 valgrind: debug $(TARGET)
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind.log $(TARGET) < tests/sample.in || true
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind.log $(TARGET) || true
 
 gdb-run: debug $(TARGET)
-	gdb -batch -ex "run < tests/sample.in" -ex "bt" -ex "info locals" --args $(TARGET) | tee gdb_trace.txt
+	gdb -batch -ex "run" -ex "bt" -ex "info locals" --args $(TARGET) | tee gdb_trace.txt
 
 clean:
-	rm -rf $(BUILDDIR) valgrind.log gdb_trace.txt tests/results
+	rm -rf $(BUILDDIR) valgrind.log gdb_trace.txt
