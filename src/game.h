@@ -7,7 +7,7 @@
 #define VALID_COLUMN(c) ((c) >= 0 && (c) < COLS)
 #define COLUMN_FULL(b, c) ((b)[0][(c)] != EMPTY)
 
-void playGame();
+void playGame(int mode);
 int dropChecker(char board[ROWS][COLS], int column, char player);
 int checkWin(char board[ROWS][COLS], char player);
 int checkDraw(char board[ROWS][COLS]);

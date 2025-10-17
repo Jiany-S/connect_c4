@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "board.h"
 #include "game.h"
+#include "bot.h"
 
 /* Read an integer from stdin.
  * Returns:
@@ -23,7 +25,7 @@ static int read_user_column(void) {
     return (int) val;
 }
 
-void playGame(void) {
+void playGame(int mode) {
     Board board;
     initBoard(board);
     char current = PLAYER_A;
@@ -31,21 +33,37 @@ void playGame(void) {
 
     while (1) {
         printBoard(board);
-        printf("Player %c's turn. Enter column (1-%d): ", current, COLS);
-        fflush(stdout);
 
-        int input = read_user_column();
-        if (input == -1) {
-            // EOF (e.g., file ended when using redirected tests, or user Ctrl+D)
-            printf("\nEnd of input. Exiting game.\n");
-            return;
-        }
-        if (input == 0) {
-            printf("Invalid input. Please type a column number 1-%d and press Enter.\n", COLS);
-            continue;
-        }
+        int column;
+        int input;
+        
+        if (mode == 2 && current == PLAYER_B) {
+            // Bot's turn (automatic)
 
-        int column = input - 1; // convert to 0-based for dropChecker
+            column = getEasyBotMove(board);
+            printf("Bot plays column %d", column+1);
+        } else {
+            // Human player's turn
+
+            printf("Player %c's turn. Enter column (1-%d): ", current, COLS);
+            fflush(stdout);
+
+            
+        
+
+            input = read_user_column();
+            if (input == -1) {
+                // EOF (e.g., file ended when using redirected tests, or user Ctrl+D)
+                printf("\nEnd of input. Exiting game.\n");
+                return;
+            }
+            if (input == 0) {
+                printf("Invalid input. Please type a column number 1-%d and press Enter.\n", COLS);
+                continue;
+            }
+
+            column = input - 1; // convert to 0-based for dropChecker
+        }
         int row = dropChecker(board, column, current);
         if (row == -1) {
             // dropChecker returns -1 for invalid column or full column
@@ -77,6 +95,21 @@ void playGame(void) {
 }
 
 int main(void) {
-    playGame();
+    int mode;
+    srand(time(NULL)); // randomize but moves once per run
+
+    printf("Select Mode:\n");
+    printf("1. Player vs Player\n");
+    printf("2. Player vs Bot (easy)\n");
+    if (scanf("%d", &mode) != 1) {
+        fprintf(stderr, "Invalid input for mode.\n");
+        return 1;
+    }
+    /* Flush leftover newline */
+    int ch;
+    while ((ch = getchar()) != '\n' && ch != EOF) { /* discard */ }
+
+    
+    playGame(mode);
     return 0;
 }
