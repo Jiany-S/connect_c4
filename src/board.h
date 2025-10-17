@@ -1,16 +1,16 @@
 #ifndef BOARD_H
-
 #define BOARD_H
+
 #define ROWS 6
 #define COLS 7
 
-typedef enum Cell {
-    ., A, B
-} Cell; // . is an empty cell, A is player 1, B is player 2
+#define PLAYER_A 'A'
+#define PLAYER_B 'B'
+#define EMPTY    '.'
 
-typedef Cell Board[ROWS][COLS];
+typedef char Board[ROWS][COLS];
 
-void initBoard(Board board); // initalizes all cells to empty
-void printBoard(Board board); // prints the current board
+void initBoard(Board board);
+void printBoard(const Board board);
 
 #endif

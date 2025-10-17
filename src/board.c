@@ -1,30 +1,29 @@
-#include <stdio.h>
+// src/board.c
 #include "board.h"
+#include <stdio.h>
 
 void initBoard(Board board) {
-    for (int i = 0; i < ROWS; i++) {
-        for (int j = 0; j < COLS; j++) {
-            board[i][j] = EMPTY; // initializes every cell to be empty
+    for (int r = 0; r < ROWS; r++) {
+        for (int c = 0; c < COLS; c++) {
+            board[r][c] = EMPTY;
         }
     }
 }
 
 void printBoard(const Board board) {
-    for (int i = 0; i < ROWS; i++) {
-        printf("+");
-        for (int j = 0; j < COLS; j++) {
-            if (i == 0) {
-                printf("   +"); // the board is open from the top
-            }else {
-                printf("---+");
-            }
-        }
-        printf("\n|");
-        for (int j = 0; j < COLS; j++) {
-            printf(" %c |", board[i][j]); // prints the current state of each cell
+    // Print column numbers
+    printf("\n");
+    for (int c = 0; c < COLS; c++) {
+        printf(" %d", c + 1);
+    }
+    printf("\n");
+
+    // Print rows
+    for (int r = 0; r < ROWS; r++) {
+        for (int c = 0; c < COLS; c++) {
+            printf(" %c", board[r][c]);
         }
         printf("\n");
     }
-
-    printf("+---+---+---+---+---+---+---+");
+    printf("\n");
 }
