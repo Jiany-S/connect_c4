@@ -17,7 +17,7 @@ static int checkSequence(char board[ROWS][COLS], char player, int startRow, int 
 
 int dropChecker(char board[ROWS][COLS], int column, char player){
     if (!VALID_COLUMN(column) || COLUMN_FULL(board, column)) {
-        return -1; // out of range column
+        return -1;
     }
     for (int row = ROWS - 1; row >= 0; --row) {
         if (board[row][column] == EMPTY) {
