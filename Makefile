@@ -1,8 +1,10 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -std=gnu11 -g
 SRCDIR = src
+TESTDIR = tests
 BUILDDIR = build
 SRCS = $(wildcard $(SRCDIR)/*.c)
+TESTS = $(wildcard $(TESTDIR)/*.c)
 TARGET = $(BUILDDIR)/connect4
 
 .PHONY: all debug release clean run test valgrind gdb-run
@@ -21,7 +23,8 @@ run: $(TARGET)
 	./$(TARGET)
 
 test: $(TARGET)
-	./tests/test_runner.sh
+	@chmod +x $(TESTDIR)/test_runner.sh
+	$(TESTDIR)/test_runner.sh
 
 valgrind: debug $(TARGET)
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind.log $(TARGET) || true
