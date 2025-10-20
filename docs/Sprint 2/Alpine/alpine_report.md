@@ -28,9 +28,8 @@ Configure the Alpine Linux VM to automatically launch the Connect 4 program at s
 
 ## Verification
 The following screenshots confirm successful setup:
-- **boot_screen.png** — shows Alpine booting up with OpenRC services.
-- **inittab_edit.png** — displays the `/etc/inittab` configuration.
-- **game_autostart.png** — Connect 4 starting automatically on boot.
+- **alpine1.jpg** — shows Alpine booting up with OpenRC services and the game prompt appearing automatically.
+- **alpine2.jpg** — displays the `/etc/inittab` with the Connect 4 startup command.
 
 ## Result
 The Alpine VM now runs the Connect 4 game automatically at startup, fulfilling the project requirement to demonstrate execution on a minimal Linux distribution.
