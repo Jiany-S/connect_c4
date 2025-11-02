@@ -10,6 +10,5 @@ int getEasyBotMove(char board[ROWS][COLS]) {
         col = rand() % COLS;
     } while (board[0][col] != EMPTY);
 
-    printf("Bot plays column %d\n", col + 1);
     return col;
 }
