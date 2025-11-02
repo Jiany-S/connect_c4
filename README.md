@@ -1,31 +1,34 @@
 # Connect 4 in C
 
-## About
+## 🎮 About
 This project is a **C implementation of the classic Connect 4 game**, developed as part of a group project for the **Systems Programming course** at the Faculty of Arts & Sciences, Department of Computer Science.
 
-The game runs entirely in the console on a Linux virtual machine.  
-Two players (or one player versus a bot) take turns dropping their checkers (`A` and `B`) into a 7x6 grid.  
-The first player to connect four in a row horizontally, vertically, or diagonally wins.
+The game runs entirely in the console on a **Linux virtual machine**.  
+Two players — or one player versus a **bot (Easy or Medium)** — take turns dropping their checkers (`A` and `B`) into a 7×6 grid.  
+The first player to connect four checkers horizontally, vertically, or diagonally wins.
 
 ---
 
-## Features
-- Console-based 7x6 Connect 4 board
-- Two-player (PvP) and Player-vs-Bot (Easy) gameplay
-- Randomized bot logic that plays valid moves only
-- Win and draw detection
-- Fully compatible with Alpine Linux auto-boot configuration
+## ✨ Features
+- Console-based 7×6 Connect 4 board  
+- **Two-player (PvP)** and **Player-vs-Bot** modes  
+- **Easy Bot:** plays random valid moves  
+- **Medium Bot:** plays with simple heuristics (prioritizes wins & blocks)  
+- Win and draw detection  
+- Fully compatible with Alpine or TinyCore Linux  
+- Optional scripts for dependency installation and Valgrind testing  
 
 ---
 
-## Getting Started
+## ⚙️ Getting Started
 
 ### Prerequisites
-- A Linux distribution (TinyCore or Alpine recommended)
-- GCC compiler
-- Make build tool
+- A Linux distribution (Alpine or TinyCore recommended)
+- GCC compiler  
+- Make build tool  
 
 ### Build and Run
+
 Clone the repository:
 ```bash
 git clone https://github.com/Jiany-S/connect_c4.git
@@ -52,47 +55,57 @@ Clean build files:
 make clean
 ```
 
+Run full Valgrind memory analysis:
+```bash
+make valgrind
+```
+
+Or run all Valgrind checks through:
+```bash
+scripts/run-valgrind-all.sh
+```
+
 ---
 
-## Repository Structure
+## 📁 Repository Structure
 ```
 connect_c4/
 │
-├── src/                 # Source files
-│   ├── board.c          # Board initialization and printing
-│   ├── board.h
-│   ├── game.c           # Gameplay logic (dropChecker, checkWin, checkDraw, playGame)
-│   ├── game.h
-│   ├── bot_easy.c            # Easy bot logic (random valid column selection)
-│   ├── bot_easy.h
-│   └── main.c           # Entry point (game loop and mode selection)
+├── docs/               # Sprint documentation (Sprints 1, 2, and 3)
 │
-├── tests/               # Unit tests and runners
+├── scripts/            # Utility scripts
+│   ├── install-deps.sh
+│   └── run-valgrind-all.sh
+│
+├── src/                # Source files
+│   ├── board.c / board.h
+│   ├── bot_easy.c / bot_easy.h
+│   ├── bot_medium.c / bot_medium.h
+│   ├── game.c / game.h
+│   └── main.c
+│
+├── tests/              # Unit tests and runner scripts
 │   ├── test_board.c
 │   ├── test_game.c
+│   ├── test_bot_medium.c
 │   └── test_runner.sh
 │
-├── docs/                # Documentation and sprint reports
-│   ├── sprint1_report.md
-│   ├── sprint2_report.md
-│   ├── testing_notes.md
-│   ├── bot_strategy.md
-│   └── alpine_report.md
-│
-├── build/               # Compiled binaries (ignored in Git)
-├── Makefile             # Build, run, test, valgrind, and debug automation
-├── .gitignore           # Ignore build artifacts and binaries
-└── README.md            # Project overview (this file)
+├── build/              # Compiled binaries (ignored in Git)
+├── Makefile            # Build, run, debug, and test automation
+├── LICENSE             # Project license
+├── valgrind.log        # Valgrind report (auto-generated)
+├── .gitignore
+└── README.md
 ```
 
 ---
 
-## Testing & Debugging
-The project was verified through:
-- Automated unit tests (`test_board.c`, `test_game.c`)
-- Interactive gameplay validation in both PvP and PvE modes
-- **GDB debugging** for runtime behavior and control flow inspection
-- **Valgrind** analysis confirming 0 memory leaks or invalid accesses
+## 🧪 Testing & Debugging
+The project was validated through:
+- Automated unit tests (`test_board.c`, `test_game.c`, `test_bot_medium.c`)
+- Interactive PvP and PvE gameplay
+- **GDB debugging** for runtime flow inspection
+- **Valgrind** confirming 0 memory leaks or invalid reads/writes
 
 Example commands:
 ```bash
@@ -101,42 +114,48 @@ make gdb-run
 make valgrind
 ```
 
-All tools reported stable, leak-free execution.
+All tests passed successfully on Alpine Linux.
 
 ---
 
-## Sprint Progress
+## 🚀 Sprint Progress
 ### Sprint 1
-- Implemented core gameplay: PvP, win/draw detection
-- Integrated Alpine VM auto-boot using `/etc/inittab`
-- Verified execution directly on VM startup
+- Implemented core gameplay (PvP, win/draw detection)
+- Integrated Alpine VM auto-boot via `/etc/inittab`
+- Verified execution directly on boot
 
 ### Sprint 2
 - Added Player-vs-Bot (Easy) mode
-- Implemented random valid bot logic in `bot_easy.c`
-- Added full GDB and Valgrind testing cycle
-- Updated Makefile, test files, and documentation
+- Implemented random move generation logic
+- Added GDB and Valgrind test cycles
+
+### Sprint 3
+- Added Player-vs-Bot (Medium) mode with heuristic logic
+- Added dedicated unit test: `test_bot_medium.c`
+- Introduced new `scripts/` folder for automation tools
+- Updated documentation and test coverage
 
 ---
 
-## Demonstration
-The project successfully runs on **Alpine Linux**, automatically launching on boot through `/etc/inittab` configuration:
+## 🖥️ Demonstration
+The project successfully runs on **Alpine Linux**, automatically launching on boot through:
 ```
 tty1::respawn:/root/connect_c4/build/connect4
 ```
-Screenshots of boot and auto-start behavior are included in `docs/screenshots/`.
+
+Screenshots and documentation for each sprint are located in the `docs/` folder.
 
 ---
 
-## Team
-- **Jiany Samara**
-- **Jad Mouawad**
+## 👥 Team
+- **Jiany Samara**  
+- **Jad Mouawad**  
 - **Andy Sleiman**
 
 ---
 
-## License
+## ⚖️ License
 This project was created for educational use as part of a university course.  
 Not intended for commercial redistribution.
 
-GitHub Repository: [https://github.com/Jiany-S/connect_c4](https://github.com/Jiany-S/connect_c4)
+**GitHub Repository:** [https://github.com/Jiany-S/connect_c4](https://github.com/Jiany-S/connect_c4)
