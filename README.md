@@ -63,8 +63,8 @@ connect_c4/
 │   ├── board.h
 │   ├── game.c           # Gameplay logic (dropChecker, checkWin, checkDraw, playGame)
 │   ├── game.h
-│   ├── bot.c            # Easy bot logic (random valid column selection)
-│   ├── bot.h
+│   ├── bot_easy.c            # Easy bot logic (random valid column selection)
+│   ├── bot_easy.h
 │   └── main.c           # Entry point (game loop and mode selection)
 │
 ├── tests/               # Unit tests and runners
@@ -113,7 +113,7 @@ All tools reported stable, leak-free execution.
 
 ### Sprint 2
 - Added Player-vs-Bot (Easy) mode
-- Implemented random valid bot logic in `bot.c`
+- Implemented random valid bot logic in `bot_easy.c`
 - Added full GDB and Valgrind testing cycle
 - Updated Makefile, test files, and documentation
 

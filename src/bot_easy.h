@@ -1,5 +1,5 @@
-#ifndef BOT_H
-#define BOT_H
+#ifndef BOT_EASY_H
+#define BOT_EASY_H
 
 #include "board.h"
 

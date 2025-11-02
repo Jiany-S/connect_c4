@@ -5,7 +5,7 @@ Implement an "Easy Bot" mode for Connect 4 that plays random valid moves against
 
 ## Design Summary
 - Added a mode selector for Player vs Player and Player vs Bot (easy).
-- Implemented `getEasyBotMove()` in `bot.c` that chooses a random non-full column.
+- Implemented `getEasyBotMove()` in `bot_easy.c` that chooses a random non-full column.
 - Integrated bot logic into `playGame()` for alternating human/bot turns.
 - Retained the same win and draw detection logic from Sprint 1.
 

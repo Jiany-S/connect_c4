@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "bot.h"
+#include "bot_easy.h"
 #include "board.h"
 
 int getEasyBotMove(char board[ROWS][COLS]) {

@@ -4,7 +4,7 @@
 #include <time.h>
 #include "board.h"
 #include "game.h"
-#include "bot.h"
+#include "bot_easy.h"
 
 /* Read an integer from stdin.
  * Returns:
