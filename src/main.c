@@ -5,6 +5,7 @@
 #include "board.h"
 #include "game.h"
 #include "bot_easy.h"
+#include "bot_medium.h"
 
 /* Read an integer from stdin.
  * Returns:
@@ -35,35 +36,37 @@ void playGame(int mode) {
         printBoard(board);
 
         int column;
-        int input;
-        
-        if (mode == 2 && current == PLAYER_B) {
-            // Bot's turn (automatic)
+        int input = 0; // keep defined for error messages
 
-            column = getEasyBotMove(board);
-            printf("Bot plays column %d", column+1);
+        if ((mode == 2 || mode == 3) && current == PLAYER_B) {
+            // Bot's turn (automatic)
+            if (mode == 2) {
+                column = getEasyBotMove(board);
+            } else { // mode == 3
+                column = getMediumMove(board, current);
+            }
+            input = column + 1;
+            printf("Bot plays column %d\n", input);
         } else {
             // Human player's turn
-
             printf("Player %c's turn. Enter column (1-%d): ", current, COLS);
             fflush(stdout);
 
-            
-        
-
-            input = read_user_column();
-            if (input == -1) {
+            int read = read_user_column();
+            if (read == -1) {
                 // EOF (e.g., file ended when using redirected tests, or user Ctrl+D)
                 printf("\nEnd of input. Exiting game.\n");
                 return;
             }
-            if (input == 0) {
+            if (read == 0) {
                 printf("Invalid input. Please type a column number 1-%d and press Enter.\n", COLS);
                 continue;
             }
 
+            input = read;
             column = input - 1; // convert to 0-based for dropChecker
         }
+
         int row = dropChecker(board, column, current);
         if (row == -1) {
             // dropChecker returns -1 for invalid column or full column
@@ -101,6 +104,7 @@ int main(void) {
     printf("Select Mode:\n");
     printf("1. Player vs Player\n");
     printf("2. Player vs Bot (easy)\n");
+    printf("3. Player vs Bot (medium)\n");
     if (scanf("%d", &mode) != 1) {
         fprintf(stderr, "Invalid input for mode.\n");
         return 1;
@@ -109,7 +113,6 @@ int main(void) {
     int ch;
     while ((ch = getchar()) != '\n' && ch != EOF) { /* discard */ }
 
-    
     playGame(mode);
     return 0;
 }
