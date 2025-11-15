@@ -1,67 +1,60 @@
-// src/test_bot_hard.c
+// tests/test_bot_hard.c
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include "bot_hard.h"
 #include "game.h"
 
-#define NUM_TEST_BOARDS 3
+#define NUM_BOARDS 14  // match number of threads you want to test
+#define MAX_MOVES 7
 
-// Example mid-game boards
-char testBoards[NUM_TEST_BOARDS][ROWS][COLS] = {
-    {
-        {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-        {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-        {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-        {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-        {EMPTY, EMPTY, EMPTY, 'A', EMPTY, EMPTY, EMPTY},
-        {'B', 'B', 'A', 'A', 'B', EMPTY, EMPTY}
-    },
-    {
-        {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-        {EMPTY, EMPTY, EMPTY, 'A', EMPTY, EMPTY, EMPTY},
-        {EMPTY, 'B', 'A', 'B', EMPTY, EMPTY, EMPTY},
-        {EMPTY, 'A', 'B', 'A', EMPTY, EMPTY, EMPTY},
-        {'B', 'B', 'A', 'A', 'B', EMPTY, EMPTY},
-        {'A', 'A', 'B', 'B', 'A', EMPTY, EMPTY}
-    },
-    {
-        {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-        {EMPTY, EMPTY, 'B', EMPTY, EMPTY, EMPTY, EMPTY},
-        {EMPTY, 'A', 'A', 'B', EMPTY, EMPTY, EMPTY},
-        {'B', 'B', 'A', 'A', 'B', EMPTY, EMPTY},
-        {'A', 'A', 'B', 'B', 'A', EMPTY, EMPTY},
-        {'B', 'A', 'B', 'A', 'B', 'A', EMPTY}
+void initRandomBoard(char board[ROWS][COLS]) {
+    for (int r = 0; r < ROWS; ++r)
+        for (int c = 0; c < COLS; ++c)
+            board[r][c] = EMPTY;
+    // drop a few random moves
+    int moves = rand() % 10 + 5;
+    for (int i = 0; i < moves; ++i) {
+        int col = rand() % COLS;
+        char player = (i % 2 == 0) ? 'A' : 'B';
+        dropChecker(board, col, player);
     }
-};
-
-void printMoveTime(int move, double duration) {
-    printf("Bot chose column %d in %.6f seconds\n", move, duration);
 }
 
 int main() {
-    printf("=== Hard Bot Multithreaded vs Single-threaded Test ===\n");
-
-    for (int b = 0; b < NUM_TEST_BOARDS; ++b) {
-        printf("\n--- Board %d ---\n", b + 1);
-        char (*board)[COLS] = testBoards[b];
-
-        // Multithreaded version
-#ifdef MT_BUILD
-        printf("[MT] ");
-        clock_t startMT = clock();
-        int moveMT = getHardMove(board, 'A');
-        clock_t endMT = clock();
-        printMoveTime(moveMT, (double)(endMT - startMT) / CLOCKS_PER_SEC);
-#endif
-
-        // Single-threaded version
-#undef MT_BUILD
-        printf("[ST] ");
-        clock_t startST = clock();
-        int moveST = getHardMove(board, 'A');
-        clock_t endST = clock();
-        printMoveTime(moveST, (double)(endST - startST) / CLOCKS_PER_SEC);
+    srand(time(NULL));
+    char boards[NUM_BOARDS][ROWS][COLS];
+    
+    // Initialize random boards
+    for (int i = 0; i < NUM_BOARDS; ++i) {
+        initRandomBoard(boards[i]);
     }
 
+    printf("=== Hard Bot Multithreaded vs Single-threaded Test ===\n\n");
+
+    clock_t start, end;
+    double mt_time, st_time;
+
+    // Multithreaded
+    start = clock();
+    for (int i = 0; i < NUM_BOARDS; ++i) {
+        int move = getHardMove(boards[i], 'A');  // MT_BUILD flag in Makefile
+        printf("[MT] Board %d Bot chose column %d\n", i + 1, move);
+    }
+    end = clock();
+    mt_time = (double)(end - start) / CLOCKS_PER_SEC;
+
+    // Single-threaded
+    start = clock();
+    for (int i = 0; i < NUM_BOARDS; ++i) {
+        // Temporarily disable multithreading in bot_hard.c by undefining MT_BUILD
+        int move = getHardMove(boards[i], 'A');
+        printf("[ST] Board %d Bot chose column %d\n", i + 1, move);
+    }
+    end = clock();
+    st_time = (double)(end - start) / CLOCKS_PER_SEC;
+
+    printf("\nMultithreaded total time: %.6f s\n", mt_time);
+    printf("Single-threaded total time: %.6f s\n", st_time);
     return 0;
 }
