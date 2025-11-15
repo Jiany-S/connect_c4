@@ -11,12 +11,14 @@ extern "C" {
 // Toggle multithreading: 1 = use threads, 0 = single-threaded
 #define USE_THREADS 1
 
-#ifdef USE_THREADS
-#define MT_BUILD
+#if USE_THREADS
+#include <pthread.h>
 #endif
 
-// Main function to get Hard Bot move
+// Main function to get Hard Bot move (default, single-threaded or threaded based on MT_BUILD)
 int getHardMove(char board[ROWS][COLS], char player);
+
+// Function to get Hard Bot move explicitly using threads or not
 int getHardMoveWithThreads(char board[ROWS][COLS], char player, int useThreads);
 
 #ifdef __cplusplus
