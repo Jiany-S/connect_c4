@@ -1,102 +1,50 @@
-// tests/test_bot_hard.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <pthread.h>
 #include "bot_hard.h"
-#include "game.h"
 
-#define NUM_BOARDS 14
+#define NUM_BOARDS 10
 
-typedef struct {
-    Board board;
-    char player;
-    int move;
-    double elapsed;
-} BoardThreadArg;
-
-void initializeBoards(Board boards[NUM_BOARDS]) {
-    // Randomly populate boards with some moves
-    for (int b = 0; b < NUM_BOARDS; ++b) {
-        for (int i = 0; i < ROWS; ++i)
-            for (int j = 0; j < COLS; ++j)
-                boards[b][i][j] = EMPTY;
-
-        // Random initial moves (optional, can adjust for testing)
-        int moves = rand() % 5 + 1; // 1-5 moves
-        for (int m = 0; m < moves; ++m) {
-            int col = rand() % COLS;
-            char player = (m % 2 == 0) ? 'A' : 'B';
-            dropChecker(boards[b], col, player);
-        }
-    }
-}
-
-void* botThreadFunc(void* arg_ptr) {
-    BoardThreadArg* arg = (BoardThreadArg*)arg_ptr;
-    clock_t start = clock();
-    arg->move = getHardMove(arg->board, arg->player);
-    clock_t end = clock();
-    arg->elapsed = (double)(end - start) / CLOCKS_PER_SEC;
-    return NULL;
+void copyBoard(char dest[ROWS][COLS], char src[ROWS][COLS]) {
+    for (int r = 0; r < ROWS; r++)
+        for (int c = 0; c < COLS; c++)
+            dest[r][c] = src[r][c];
 }
 
 int main() {
-    srand(time(NULL));
+    printf("=== Hard Bot Multithreaded vs Single-threaded Test ===\n");
 
-    printf("=== Hard Bot Multithreaded vs Single-threaded Test ===\n\n");
+    // Example: random boards for testing
+    char boards[NUM_BOARDS][ROWS][COLS];
+    for (int b = 0; b < NUM_BOARDS; b++)
+        for (int r = 0; r < ROWS; r++)
+            for (int c = 0; c < COLS; c++)
+                boards[b][r][c] = (rand() % 3 == 0) ? 'A' : ((rand() % 2 == 0) ? 'B' : '.');
 
-    Board boards[NUM_BOARDS];
-    initializeBoards(boards);
+    double mtTotal = 0.0, stTotal = 0.0;
 
-    BoardThreadArg mtArgs[NUM_BOARDS];
-    BoardThreadArg stArgs[NUM_BOARDS];
+    for (int b = 0; b < NUM_BOARDS; b++) {
+        char boardCopy[ROWS][COLS];
+        copyBoard(boardCopy, boards[b]);
 
-    pthread_t threads[NUM_BOARDS];
+        clock_t mtStart = clock();
+        int mtMove = getHardMoveWithThreads(boardCopy, 'A', 1); // MT
+        clock_t mtEnd = clock();
+        double mtTime = (double)(mtEnd - mtStart) / CLOCKS_PER_SEC;
+        mtTotal += mtTime;
+        printf("[MT] Board %d Bot chose column %d in %.6f s\n", b + 1, mtMove, mtTime);
 
-    // --- MULTITHREADED: one thread per board ---
-    for (int i = 0; i < NUM_BOARDS; ++i) {
-        for (int r = 0; r < ROWS; ++r)
-            for (int c = 0; c < COLS; ++c)
-                mtArgs[i].board[r][c] = boards[i][r][c];
-        mtArgs[i].player = 'A';
-        pthread_create(&threads[i], NULL, botThreadFunc, &mtArgs[i]);
+        copyBoard(boardCopy, boards[b]);
+        clock_t stStart = clock();
+        int stMove = getHardMoveWithThreads(boardCopy, 'A', 0); // ST
+        clock_t stEnd = clock();
+        double stTime = (double)(stEnd - stStart) / CLOCKS_PER_SEC;
+        stTotal += stTime;
+        printf("[ST] Board %d Bot chose column %d in %.6f s\n", b + 1, stMove, stTime);
     }
 
-    for (int i = 0; i < NUM_BOARDS; ++i)
-        pthread_join(threads[i], NULL);
-
-    double totalMT = 0;
-    for (int i = 0; i < NUM_BOARDS; ++i) {
-        printf("[MT] Board %d Bot chose column %d in %.6f s\n", i + 1, mtArgs[i].move, mtArgs[i].elapsed);
-        totalMT += mtArgs[i].elapsed;
-    }
-
-    printf("\n");
-
-    // --- SINGLE-THREADED: sequential processing ---
-    clock_t stStart = clock();
-    for (int i = 0; i < NUM_BOARDS; ++i) {
-        for (int r = 0; r < ROWS; ++r)
-            for (int c = 0; c < COLS; ++c)
-                stArgs[i].board[r][c] = boards[i][r][c];
-        stArgs[i].player = 'A';
-
-        clock_t start = clock();
-        stArgs[i].move = getHardMove(stArgs[i].board, stArgs[i].player);
-        clock_t end = clock();
-        stArgs[i].elapsed = (double)(end - start) / CLOCKS_PER_SEC;
-    }
-    clock_t stEnd = clock();
-
-    double totalST = 0;
-    for (int i = 0; i < NUM_BOARDS; ++i) {
-        printf("[ST] Board %d Bot chose column %d in %.6f s\n", i + 1, stArgs[i].move, stArgs[i].elapsed);
-        totalST += stArgs[i].elapsed;
-    }
-
-    printf("\nMultithreaded total time: %.6f s\n", totalMT);
-    printf("Single-threaded total time: %.6f s\n", totalST);
+    printf("\nMultithreaded total time: %.6f s\n", mtTotal);
+    printf("Single-threaded total time: %.6f s\n", stTotal);
 
     return 0;
 }
