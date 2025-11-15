@@ -17,6 +17,7 @@ extern "C" {
 
 // Main function to get Hard Bot move
 int getHardMove(char board[ROWS][COLS], char player);
+int getHardMoveWithThreads(char board[ROWS][COLS], char player, int useThreads);
 
 #ifdef __cplusplus
 }
