@@ -1,3 +1,4 @@
+// src/bot_hard.c
 #include <limits.h>
 #include <string.h>
 #include "bot_hard.h"
@@ -11,6 +12,11 @@
 #define OPP_THREAT_PENALTY 120
 #define CENTER_WEIGHT 7
 #define NOVICE_TRAP_BONUS 200
+
+#ifdef MT_BUILD
+#include <pthread.h>
+#include <stdlib.h>
+#endif
 
 static int isTerminalNode(char board[ROWS][COLS], char aiPlayer);
 static void collectValidColumns(char board[ROWS][COLS], int validCols[COLS], int *validCount);
@@ -245,6 +251,22 @@ static int minimax(char board[ROWS][COLS], int depth, int alpha, int beta, int i
     }
 }
 
+#ifdef MT_BUILD
+
+typedef struct {
+    Board board_copy;
+    int column;
+    char player;
+    int score;
+} ThreadArg;
+
+static void *thread_worker(void *arg_ptr) {
+    ThreadArg *arg = (ThreadArg *)arg_ptr;
+    arg->score = minimax(arg->board_copy, MAX_DEPTH - 1, INT_MIN, INT_MAX, 0, arg->player);
+    return NULL;
+}
+#endif
+
 int getHardMove(char board[ROWS][COLS], char player) {
     int validCols[COLS];
     int validCount = 0;
@@ -253,20 +275,42 @@ int getHardMove(char board[ROWS][COLS], char player) {
         return -1;
     }
 
+#ifdef MT_BUILD
+    pthread_t *threads = malloc(sizeof(pthread_t) * validCount);
+    ThreadArg *args = malloc(sizeof(ThreadArg) * validCount);
+    if (!threads || !args) {
+        free(threads);
+        free(args);
+        goto single_threaded_eval;
+    }
+
+    for (int i = 0; i < validCount; ++i) {
+        int col = validCols[i];
+        simulateMove(args[i].board_copy, board, col, player);
+        args[i].column = col;
+        args[i].player = player;
+        args[i].score = INT_MIN;
+
+        if (pthread_create(&threads[i], NULL, thread_worker, &args[i]) != 0) {
+            // fallback synchronous evaluation for this column
+            args[i].score = minimax(args[i].board_copy, MAX_DEPTH - 1, INT_MIN, INT_MAX, 0, player);
+            threads[i] = 0;
+        }
+    }
+
     int bestColumn = -1;
     int bestScore = INT_MIN;
     int center = COLS / 2;
     int bestDist = COLS;
 
     for (int i = 0; i < validCount; ++i) {
-        int col = validCols[i];
-        Board temp;
-        simulateMove(temp, board, col, player);
-        int score = minimax(temp, MAX_DEPTH - 1, INT_MIN, INT_MAX, 0, player);
-        int dist = center - col;
-        if (dist < 0) {
-            dist = -dist;
+        if (threads[i] != 0) {
+            pthread_join(threads[i], NULL);
         }
+        int score = args[i].score;
+        int col = args[i].column;
+        int dist = center - col;
+        if (dist < 0) dist = -dist;
         if (score > bestScore || (score == bestScore && dist < bestDist)) {
             bestScore = score;
             bestColumn = col;
@@ -274,5 +318,35 @@ int getHardMove(char board[ROWS][COLS], char player) {
         }
     }
 
+    free(threads);
+    free(args);
     return bestColumn;
+
+single_threaded_eval:
+#endif
+
+    {
+        int bestColumn = -1;
+        int bestScore = INT_MIN;
+        int center = COLS / 2;
+        int bestDist = COLS;
+
+        for (int i = 0; i < validCount; ++i) {
+            int col = validCols[i];
+            Board temp;
+            simulateMove(temp, board, col, player);
+            int score = minimax(temp, MAX_DEPTH - 1, INT_MIN, INT_MAX, 0, player);
+            int dist = center - col;
+            if (dist < 0) {
+                dist = -dist;
+            }
+            if (score > bestScore || (score == bestScore && dist < bestDist)) {
+                bestScore = score;
+                bestColumn = col;
+                bestDist = dist;
+            }
+        }
+
+        return bestColumn;
+    }
 }
