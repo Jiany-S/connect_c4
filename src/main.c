@@ -1,3 +1,4 @@
+// src/main.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +8,10 @@
 #include "bot_easy.h"
 #include "bot_medium.h"
 #include "bot_hard.h"
+
+/* If compiled with -DMT_BUILD and -pthread, bot_hard will evaluate top-level moves
+ * in parallel using pthreads. Use `make multithread` to build that version.
+ */
 
 /* Read an integer from stdin.
  * Returns:
