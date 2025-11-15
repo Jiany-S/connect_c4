@@ -1,5 +1,6 @@
 #include <limits.h>
 #include <string.h>
+#include <stdlib.h>
 #include "bot_hard.h"
 #include "game.h"
 
@@ -12,13 +13,9 @@
 #define CENTER_WEIGHT 7
 #define NOVICE_TRAP_BONUS 200
 
-#ifdef MT_BUILD
-#include <pthread.h>
-#include <stdlib.h>
-#endif
-
 typedef char Board[ROWS][COLS];
 
+// --- Helper function declarations ---
 static int isTerminalNode(char board[ROWS][COLS], char aiPlayer);
 static void collectValidColumns(char board[ROWS][COLS], int validCols[COLS], int *validCount);
 static void simulateMove(Board dest, char board[ROWS][COLS], int column, char player);
@@ -29,7 +26,9 @@ static int evaluateNoviceTrapBottomRow(char board[ROWS][COLS], char aiPlayer);
 static int evaluateBoard(char board[ROWS][COLS], char aiPlayer);
 static int minimax(char board[ROWS][COLS], int depth, int alpha, int beta, int isMaximizing, char aiPlayer);
 
-#ifdef MT_BUILD
+#ifdef USE_THREADS
+#include <pthread.h>
+
 typedef struct {
     Board board_copy;
     int column;
@@ -44,14 +43,13 @@ static void *thread_worker(void *arg_ptr) {
 }
 #endif
 
-// New test-friendly function: allows forcing MT or ST
+// --- Multithreaded or Single-threaded controlled function ---
 int getHardMoveWithThreads(char board[ROWS][COLS], char player, int useThreads) {
-    int validCols[COLS];
-    int validCount = 0;
+    int validCols[COLS], validCount = 0;
     collectValidColumns(board, validCols, &validCount);
     if (validCount == 0) return -1;
 
-#ifdef MT_BUILD
+#ifdef USE_THREADS
     if (useThreads) {
         pthread_t *threads = malloc(sizeof(pthread_t) * validCount);
         ThreadArg *args = malloc(sizeof(ThreadArg) * validCount);
@@ -101,12 +99,12 @@ single_threaded_eval:
     }
 }
 
-// Normal gameplay function
+// --- Normal gameplay function ---
 int getHardMove(char board[ROWS][COLS], char player) {
     return getHardMoveWithThreads(board, player, USE_THREADS);
 }
 
-// --- Helper functions below ---
+// --- Helper function implementations ---
 static int isTerminalNode(char board[ROWS][COLS], char aiPlayer) {
     char opponent = SWITCH_PLAYER(aiPlayer);
     return checkWin(board, aiPlayer) || checkWin(board, opponent) || checkDraw(board);
@@ -129,123 +127,125 @@ static void simulateMove(Board dest, char board[ROWS][COLS], int column, char pl
 
 static int scoreWindow(char window[4], char aiPlayer) {
     char opponent = SWITCH_PLAYER(aiPlayer);
-    int aiCount = 0, oppCount = 0, emptyCount = 0;
-    for (int i = 0; i < 4; ++i) {
-        if (window[i] == aiPlayer) ++aiCount;
-        else if (window[i] == opponent) ++oppCount;
-        else if (window[i] == EMPTY) ++emptyCount;
+    int aiCount=0, oppCount=0, emptyCount=0;
+    for (int i=0;i<4;i++){
+        if(window[i]==aiPlayer) aiCount++;
+        else if(window[i]==opponent) oppCount++;
+        else if(window[i]==EMPTY) emptyCount++;
     }
-    int score = 0;
-    if (aiCount == 4) score += 10000;
-    else if (aiCount == 3 && emptyCount == 1) score += 100;
-    else if (aiCount == 2 && emptyCount == 2) score += 10;
+    int score=0;
+    if(aiCount==4) score+=10000;
+    else if(aiCount==3 && emptyCount==1) score+=100;
+    else if(aiCount==2 && emptyCount==2) score+=10;
 
-    if (oppCount == 4) score -= 10000;
-    else if (oppCount == 3 && emptyCount == 1) score -= 120;
-    else if (oppCount == 2 && emptyCount == 2) score -= 10;
+    if(oppCount==4) score-=10000;
+    else if(oppCount==3 && emptyCount==1) score-=120;
+    else if(oppCount==2 && emptyCount==2) score-=10;
     return score;
 }
 
 static int countCenterBonus(char board[ROWS][COLS], char aiPlayer) {
-    int centerCol = COLS / 2, count = 0;
-    for (int r = 0; r < ROWS; ++r) if (board[r][centerCol] == aiPlayer) ++count;
-    return count * CENTER_WEIGHT;
+    int centerCol = COLS/2, count=0;
+    for(int r=0;r<ROWS;r++) if(board[r][centerCol]==aiPlayer) count++;
+    return count*CENTER_WEIGHT;
 }
 
-static int countThreatsForPlayer(char board[ROWS][COLS], char player) {
-    int threats = 0;
-    for (int col = 0; col < COLS; ++col) {
-        if (board[0][col] != EMPTY) continue;
+static int countThreatsForPlayer(char board[ROWS][COLS], char player){
+    int threats=0;
+    for(int col=0;col<COLS;col++){
+        if(board[0][col]!=EMPTY) continue;
         Board temp;
         simulateMove(temp, board, col, player);
-        if (checkWin(temp, player)) ++threats;
+        if(checkWin(temp, player)) threats++;
     }
     return threats;
 }
 
-static int evaluateNoviceTrapBottomRow(char board[ROWS][COLS], char aiPlayer) {
-    int row = ROWS - 1, bonus = 0;
-    for (int col = 0; col <= COLS - 4; ++col) {
-        char c0 = board[row][col], c1 = board[row][col+1], c2 = board[row][col+2], c3 = board[row][col+3];
-        if ((c0==aiPlayer && c1==aiPlayer && c2==aiPlayer && c3==EMPTY) ||
-            (c0==EMPTY && c1==aiPlayer && c2==aiPlayer && c3==aiPlayer)) bonus += NOVICE_TRAP_BONUS;
+static int evaluateNoviceTrapBottomRow(char board[ROWS][COLS], char aiPlayer){
+    int row=ROWS-1, bonus=0;
+    for(int col=0;col<=COLS-4;col++){
+        char c0=board[row][col],c1=board[row][col+1],c2=board[row][col+2],c3=board[row][col+3];
+        if((c0==aiPlayer && c1==aiPlayer && c2==aiPlayer && c3==EMPTY) ||
+           (c0==EMPTY && c1==aiPlayer && c2==aiPlayer && c3==aiPlayer)) bonus+=NOVICE_TRAP_BONUS;
     }
     return bonus;
 }
 
-static int evaluateBoard(char board[ROWS][COLS], char aiPlayer) {
-    int score = 0;
-    char opponent = SWITCH_PLAYER(aiPlayer);
+static int evaluateBoard(char board[ROWS][COLS], char aiPlayer){
+    int score=0;
+    char opponent=SWITCH_PLAYER(aiPlayer);
     char window[4];
 
-    for (int r = 0; r < ROWS; ++r)
-        for (int c = 0; c <= COLS-4; ++c) {
-            for (int i = 0; i < 4; ++i) window[i] = board[r][c+i];
-            score += scoreWindow(window, aiPlayer);
+    for(int r=0;r<ROWS;r++)
+        for(int c=0;c<=COLS-4;c++){
+            for(int i=0;i<4;i++) window[i]=board[r][c+i];
+            score+=scoreWindow(window, aiPlayer);
         }
 
-    for (int c = 0; c < COLS; ++c)
-        for (int r = 0; r <= ROWS-4; ++r) {
-            for (int i = 0; i < 4; ++i) window[i] = board[r+i][c];
-            score += scoreWindow(window, aiPlayer);
+    for(int c=0;c<COLS;c++)
+        for(int r=0;r<=ROWS-4;r++){
+            for(int i=0;i<4;i++) window[i]=board[r+i][c];
+            score+=scoreWindow(window, aiPlayer);
         }
 
-    for (int r = 0; r <= ROWS-4; ++r)
-        for (int c = 0; c <= COLS-4; ++c) {
-            for (int i = 0; i < 4; ++i) window[i] = board[r+i][c+i];
-            score += scoreWindow(window, aiPlayer);
+    for(int r=0;r<=ROWS-4;r++)
+        for(int c=0;c<=COLS-4;c++){
+            for(int i=0;i<4;i++) window[i]=board[r+i][c+i];
+            score+=scoreWindow(window, aiPlayer);
         }
 
-    for (int r = 3; r < ROWS; ++r)
-        for (int c = 0; c <= COLS-4; ++c) {
-            for (int i = 0; i < 4; ++i) window[i] = board[r-i][c+i];
-            score += scoreWindow(window, aiPlayer);
+    for(int r=3;r<ROWS;r++)
+        for(int c=0;c<=COLS-4;c++){
+            for(int i=0;i<4;i++) window[i]=board[r-i][c+i];
+            score+=scoreWindow(window, aiPlayer);
         }
 
-    score += countCenterBonus(board, aiPlayer);
-
-    int aiThreats = countThreatsForPlayer(board, aiPlayer);
-    int oppThreats = countThreatsForPlayer(board, opponent);
-    if (aiThreats >= 2) score += DOUBLE_THREAT_BONUS;
-    if (oppThreats >= 2) score -= DOUBLE_THREAT_PENALTY;
-    score += evaluateNoviceTrapBottomRow(board, aiPlayer);
-    if (oppThreats > 0) score -= oppThreats * OPP_THREAT_PENALTY;
+    score+=countCenterBonus(board, aiPlayer);
+    int aiThreats=countThreatsForPlayer(board, aiPlayer);
+    int oppThreats=countThreatsForPlayer(board, opponent);
+    if(aiThreats>=2) score+=DOUBLE_THREAT_BONUS;
+    if(oppThreats>=2) score-=DOUBLE_THREAT_PENALTY;
+    score+=evaluateNoviceTrapBottomRow(board, aiPlayer);
+    if(oppThreats>0) score-=oppThreats*OPP_THREAT_PENALTY;
 
     return score;
 }
 
-static int minimax(char board[ROWS][COLS], int depth, int alpha, int beta, int isMax, char aiPlayer) {
-    char opponent = SWITCH_PLAYER(aiPlayer);
+static int minimax(char board[ROWS][COLS], int depth, int alpha, int beta, int isMax, char aiPlayer){
+    char opponent=SWITCH_PLAYER(aiPlayer);
 
-    if (checkWin(board, aiPlayer)) return WIN_SCORE - depth;
-    if (checkWin(board, opponent)) return LOSS_SCORE + depth;
-    if (depth == 0 || isTerminalNode(board, aiPlayer)) return evaluateBoard(board, aiPlayer);
+    if(checkWin(board, aiPlayer)) return WIN_SCORE-depth;
+    if(checkWin(board, opponent)) return LOSS_SCORE+depth;
+    if(depth==0 || isTerminalNode(board, aiPlayer)) return evaluateBoard(board, aiPlayer);
 
     int validCols[COLS], validCount=0;
     collectValidColumns(board, validCols, &validCount);
-    if (validCount == 0) return evaluateBoard(board, aiPlayer);
+    if(validCount==0) return evaluateBoard(board, aiPlayer);
 
-    if (isMax) {
-        int maxEval = INT_MIN;
-        for (int i=0;i<validCount;i++) {
+    if(isMax){
+        int maxEval=INT_MIN;
+        for(int i=0;i<validCount;i++){
             Board temp;
             simulateMove(temp, board, validCols[i], aiPlayer);
-            int eval = minimax(temp, depth-1, alpha, beta, 0, aiPlayer);
-            if (eval>maxEval) maxEval=eval;
-            if (eval>alpha) alpha=eval;
-            if (alpha>=beta) break;
+            int eval=minimax(temp, depth-1, alpha, beta, 0, aiPlayer);
+            if(eval>maxEval) maxEval=eval;
+            if(eval>alpha) alpha=eval;
+            if(alpha>=beta) break;
         }
         return maxEval;
     } else {
-        int minEval = INT_MAX;
-        for (int i=0;i<validCount;i++) {
+        int minEval=INT_MAX;
+        for(int i=0;i<validCount;i++){
             Board temp;
             simulateMove(temp, board, validCols[i], opponent);
-            int eval = minimax(temp, depth-1, alpha, beta, 1, aiPlayer);
-            if (eval<minEval) minEval=eval;
-            if (eval<beta) beta=eval;
-            if (alpha>=beta) break;
+            int eval=minimax(temp, depth-1, alpha, beta, 1, aiPlayer);
+            if(eval<minEval) minEval=eval;
+            if(eval<beta) beta=eval;
+            if(alpha>=beta) break;
         }
         return minEval;
+    }
+}
+
     }
 }
