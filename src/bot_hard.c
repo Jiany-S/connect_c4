@@ -4,7 +4,7 @@
 #include "bot_hard.h"
 #include "game.h"
 
-#define MAX_DEPTH 12
+#define MAX_DEPTH 6
 #define WIN_SCORE 100000
 #define LOSS_SCORE -100000
 #define DOUBLE_THREAT_BONUS 800
