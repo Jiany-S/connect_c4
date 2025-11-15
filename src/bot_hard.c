@@ -245,7 +245,6 @@ static int minimax(char board[ROWS][COLS], int depth, int alpha, int beta, int i
         }
         return minEval;
     }
-}
 
     }
 }
