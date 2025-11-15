@@ -84,7 +84,7 @@ connect_c4/
 │   ├── test_board.c
 │   ├── test_game.c
 │   ├── test_bot_medium.c
-│   └── test_bot_hard.c (optional)
+│   └── test_bot_hard.c
 │
 ├── scripts/
 │   ├── install-deps.sh
