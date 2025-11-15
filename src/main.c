@@ -6,6 +6,7 @@
 #include "game.h"
 #include "bot_easy.h"
 #include "bot_medium.h"
+#include "bot_hard.h"
 
 /* Read an integer from stdin.
  * Returns:
@@ -38,12 +39,14 @@ void playGame(int mode) {
         int column;
         int input = 0; // keep defined for error messages
 
-        if ((mode == 2 || mode == 3) && current == PLAYER_B) {
+        if ((mode == 2 || mode == 3 || mode == 4) && current == PLAYER_B) {
             // Bot's turn (automatic)
             if (mode == 2) {
                 column = getEasyBotMove(board);
-            } else { // mode == 3
+            } else if (mode == 3){
                 column = getMediumMove(board, current);
+            } else { // mode == 4
+                column = getHardMove(board, current);
             }
             input = column + 1;
             printf("Bot plays column %d\n", input);
@@ -105,10 +108,17 @@ int main(void) {
     printf("1. Player vs Player\n");
     printf("2. Player vs Bot (easy)\n");
     printf("3. Player vs Bot (medium)\n");
+    printf("4. Player vs Bot (hard)\n");
     if (scanf("%d", &mode) != 1) {
         fprintf(stderr, "Invalid input for mode.\n");
         return 1;
     }
+
+    if (mode < 1 || mode > 4) {
+        fprintf(stderr, "Invalid mode. Please choose between 1 and 4.\n");
+        return 1;
+    }
+    
     /* Flush leftover newline */
     int ch;
     while ((ch = getchar()) != '\n' && ch != EOF) { /* discard */ }
