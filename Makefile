@@ -7,13 +7,18 @@ SRCS = $(wildcard $(SRCDIR)/*.c)
 TESTS = $(wildcard $(TESTDIR)/*.c)
 TARGET = $(BUILDDIR)/connect4
 
-.PHONY: all debug release clean run test valgrind gdb-run
+.PHONY: all debug release clean run test valgrind gdb-run multithread
 
 all: CFLAGS += -O2
 all: $(TARGET)
 
 debug: CFLAGS += -g -O0 -DDEBUG
 debug: clean $(TARGET)
+
+# Multithreaded build for the bot (adds -pthread)
+# Build with `make multithread` to enable pthreads and MT_BUILD compile flag.
+multithread: CFLAGS += -O2 -DMT_BUILD -pthread
+multithread: clean $(TARGET)
 
 $(TARGET): $(SRCS)
 	@mkdir -p $(BUILDDIR)
