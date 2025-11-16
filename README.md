@@ -1,33 +1,38 @@
-# Connect 4 in C
+# Connect 4 in C — Enhanced Edition
 
 ## 🎮 About
-This project is a **C implementation of the classic Connect 4 game**, developed as part of a group project for the **Systems Programming course** at the Faculty of Arts & Sciences, Department of Computer Science.
+This project is a **C implementation of Connect 4**, developed for the *Systems Programming* course at the Faculty of Arts & Sciences, Department of Computer Science.
 
-The game runs entirely in the console on a **Linux virtual machine**.  
-Two players — or one player versus a **bot (Easy or Medium)** — take turns dropping their checkers (`A` and `B`) into a 7×6 grid.  
-The first player to connect four checkers horizontally, vertically, or diagonally wins.
+The game runs entirely in a Linux terminal and supports:
+- Two-player mode  
+- Player vs **Easy Bot**  
+- Player vs **Medium Bot**  
+- Player vs **Hard Bot** (**Sprint 4**) — featuring **Minimax + Alpha-Beta pruning + Multithreading**
 
 ---
 
 ## ✨ Features
-- Console-based 7×6 Connect 4 board  
-- **Two-player (PvP)** and **Player-vs-Bot** modes  
-- **Easy Bot:** plays random valid moves  
-- **Medium Bot:** plays with simple heuristics (prioritizes wins & blocks)  
-- Win and draw detection  
-- Fully compatible with Alpine or TinyCore Linux  
-- Optional scripts for dependency installation and Valgrind testing  
+- 7×6 console board  
+- PvP and PvE  
+- **Easy Bot** → random moves  
+- **Medium Bot** → heuristic scoring  
+- **Hard Bot (NEW)**  
+  - Minimax search  
+  - Alpha-beta pruning  
+  - **Multithreading on top-level moves**  
+- Win/draw detection  
+- Build, test, debug, and Valgrind support  
 
 ---
 
 ## ⚙️ Getting Started
 
 ### Prerequisites
-- A Linux distribution (Alpine or TinyCore recommended)
-- GCC compiler  
-- Make build tool  
+- Linux VM (Alpine/TinyCore or any minimal distro)  
+- GCC  
+- Make  
 
-### Build and Run
+### Build & Run
 
 Clone the repository:
 ```bash
@@ -35,34 +40,24 @@ git clone https://github.com/Jiany-S/connect_c4.git
 cd connect_c4
 ```
 
-Build the game:
+Build:
 ```bash
 make debug
 ```
 
-Run the game:
+Run:
 ```bash
 make run
 ```
 
-Run automated tests:
+Run tests:
 ```bash
 make test
 ```
 
-Clean build files:
-```bash
-make clean
-```
-
-Run full Valgrind memory analysis:
+Valgrind:
 ```bash
 make valgrind
-```
-
-Or run all Valgrind checks through:
-```bash
-scripts/run-valgrind-all.sh
 ```
 
 ---
@@ -71,79 +66,93 @@ scripts/run-valgrind-all.sh
 ```
 connect_c4/
 │
-├── docs/               # Sprint documentation (Sprints 1, 2, and 3)
+├── docs/               
+│   ├── sprint1/
+│   ├── sprint2/
+│   ├── sprint3/
+│   └── sprint4/
 │
-├── scripts/            # Utility scripts
-│   ├── install-deps.sh
-│   └── run-valgrind-all.sh
-│
-├── src/                # Source files
+├── src/
 │   ├── board.c / board.h
 │   ├── bot_easy.c / bot_easy.h
 │   ├── bot_medium.c / bot_medium.h
+│   ├── bot_hard.c / bot_hard.h
 │   ├── game.c / game.h
 │   └── main.c
 │
-├── tests/              # Unit tests and runner scripts
+├── tests/
 │   ├── test_board.c
 │   ├── test_game.c
 │   ├── test_bot_medium.c
-│   └── test_runner.sh
+│   └── test_bot_hard.c
 │
-├── build/              # Compiled binaries (ignored in Git)
-├── Makefile            # Build, run, debug, and test automation
-├── LICENSE             # Project license
-├── valgrind.log        # Valgrind report (auto-generated)
-├── .gitignore
-└── README.md
+├── scripts/
+│   ├── install-deps.sh
+│   └── run-valgrind-all.sh
+│
+├── Makefile
+├── LICENSE
+├── README.md
+└── .gitignore
 ```
+
+---
+
+## 🧠 Hard Bot — Sprint 4 Overview
+The new **Hard Bot** introduces an advanced competitive AI model:
+
+### ✔️ **Minimax Algorithm**
+Evaluates future board states several moves ahead.
+
+### ✔️ **Alpha-Beta Pruning**
+Reduces the number of evaluated nodes dramatically.
+
+### ✔️ **Multithreading (NEW)**
+The top-level branching factor of Connect 4 is at most **7**.
+
+We create one thread for each possible first move.  
+Each thread:
+- Copies the board  
+- Applies the move  
+- Runs Minimax  
+- Returns the score  
+
+This makes the bot:
+- Faster  
+- Capable of deeper searches  
+- More competitive  
 
 ---
 
 ## 🧪 Testing & Debugging
-The project was validated through:
-- Automated unit tests (`test_board.c`, `test_game.c`, `test_bot_medium.c`)
-- Interactive PvP and PvE gameplay
-- **GDB debugging** for runtime flow inspection
-- **Valgrind** confirming 0 memory leaks or invalid reads/writes
-
-Example commands:
-```bash
-make debug
-make gdb-run
-make valgrind
-```
-
-All tests passed successfully on Alpine Linux.
+Validated through:
+- Unit tests  
+- Manual gameplay  
+- GDB debugging  
+- Full Valgrind checks  
 
 ---
 
-## 🚀 Sprint Progress
-### Sprint 1
-- Implemented core gameplay (PvP, win/draw detection)
-- Integrated Alpine VM auto-boot via `/etc/inittab`
-- Verified execution directly on boot
+## 🚀 Sprint Progress Summary
 
-### Sprint 2
-- Added Player-vs-Bot (Easy) mode
-- Implemented random move generation logic
-- Added GDB and Valgrind test cycles
+### **Sprint 1**
+- Core game engine  
+- PvP  
+- Win/draw logic  
 
-### Sprint 3
-- Added Player-vs-Bot (Medium) mode with heuristic logic
-- Added dedicated unit test: `test_bot_medium.c`
-- Introduced new `scripts/` folder for automation tools
-- Updated documentation and test coverage
+### **Sprint 2**
+- Easy Bot  
+- GDB / Valgrind  
 
----
+### **Sprint 3**
+- Medium Bot  
+- Tests  
+- Scripts  
 
-## 🖥️ Demonstration
-The project successfully runs on **Alpine Linux**, automatically launching on boot through:
-```
-tty1::respawn:/root/connect_c4/build/connect4
-```
-
-Screenshots and documentation for each sprint are located in the `docs/` folder.
+### **Sprint 4**
+- Hard Bot (Minimax + Alpha-Beta)  
+- Multithreading  
+- New documentation  
 
 ---
 
@@ -155,7 +164,6 @@ Screenshots and documentation for each sprint are located in the `docs/` folder.
 ---
 
 ## ⚖️ License
-This project was created for educational use as part of a university course.  
-Not intended for commercial redistribution.
+For educational use.
 
-**GitHub Repository:** [https://github.com/Jiany-S/connect_c4](https://github.com/Jiany-S/connect_c4)
+**GitHub Repository:** https://github.com/Jiany-S/connect_c4
