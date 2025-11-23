@@ -8,6 +8,7 @@
 #include "bot_easy.h"
 #include "bot_medium.h"
 #include "bot_hard.h"
+#include "network.h"
 
 /* If compiled with -DMT_BUILD and -pthread, bot_hard will evaluate top-level moves
  * in parallel using pthreads. Use `make multithread` to build that version.
@@ -107,27 +108,54 @@ void playGame(int mode) {
 
 int main(void) {
     int mode;
-    srand(time(NULL)); // randomize but moves once per run
+    srand(time(NULL));
 
     printf("Select Mode:\n");
     printf("1. Player vs Player\n");
     printf("2. Player vs Bot (easy)\n");
     printf("3. Player vs Bot (medium)\n");
     printf("4. Player vs Bot (hard)\n");
+    printf("5. Network Game (Host - Player vs Player)\n");
+    printf("6. Network vs Bot (easy) - Host\n");
+    printf("7. Network vs Bot (medium) - Host\n");
+    printf("8. Network vs Bot (hard) - Host\n");
+    
     if (scanf("%d", &mode) != 1) {
         fprintf(stderr, "Invalid input for mode.\n");
         return 1;
     }
 
-    if (mode < 1 || mode > 4) {
-        fprintf(stderr, "Invalid mode. Please choose between 1 and 4.\n");
+    if (mode < 1 || mode > 8) {
+        fprintf(stderr, "Invalid mode. Please choose between 1 and 8.\n");
         return 1;
     }
     
-    /* Flush leftover newline */
     int ch;
     while ((ch = getchar()) != '\n' && ch != EOF) { /* discard */ }
 
-    playGame(mode);
+    // Handle network modes
+    if (mode >= 5 && mode <= 8) {
+        int socket;
+        int port = 8888;
+        
+        socket = startServer(port);
+        if (socket < 0) {
+            fprintf(stderr, "Failed to start server\n");
+            return 1;
+        }
+        
+        // Determine bot difficulty
+        int botMode = 1; // Player vs Player by default
+        if (mode == 6) botMode = 2; // Easy bot
+        else if (mode == 7) botMode = 3; // Medium bot
+        else if (mode == 8) botMode = 4; // Hard bot
+        
+        playNetworkGame(botMode, socket, 1);
+        closeConnection(socket);
+    } else {
+        // Local game modes
+        playGame(mode);
+    }
+    
     return 0;
 }
