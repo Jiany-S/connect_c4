@@ -230,7 +230,7 @@ void playNetworkGame(int mode, int socket, int isServer) {
 
         printBoard(board);
 
-        int column;
+        int column = -1;
         int input = 0;
 
         if (current == localPlayer) {
