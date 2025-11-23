@@ -216,13 +216,11 @@ void playNetworkGame(int mode, int socket, int isServer) {
     char current = PLAYER_A;
     int move_count = 0;
 
-    // Determine which player is remote
-    // Server is always Player A (local), Client is Player B (remote)
     char localPlayer = isServer ? PLAYER_A : PLAYER_B;
     char remotePlayer = isServer ? PLAYER_B : PLAYER_A;
 
     while (1) {
-        // Client always waits for board update from server at start of turn
+        // Client always waits for board update at the start of turn
         if (!isServer) {
             if (receiveBoardUpdate(socket, board, &current) != 0) {
                 fprintf(stderr, "Lost connection to server\n");
@@ -235,8 +233,8 @@ void playNetworkGame(int mode, int socket, int isServer) {
         int column;
         int input = 0;
 
-        if (current == localPlayer && !isServer) {
-            // Client's turn - ask for move and send to server
+        if (current == localPlayer) {
+            // Local turn (server or client)
             printf("Your turn (Player %c). Enter column (1-%d): ", current, COLS);
             fflush(stdout);
 
@@ -253,63 +251,34 @@ void playNetworkGame(int mode, int socket, int isServer) {
             input = read;
             column = input - 1;
 
-            // Client sends move to server
-            if (sendMove(socket, column) != 0) {
-                fprintf(stderr, "Failed to send move to server\n");
-                return;
+            if (!isServer) {
+                // Client sends move to server
+                if (sendMove(socket, column) != 0) {
+                    fprintf(stderr, "Failed to send move to server\n");
+                    return;
+                }
+                // Wait for next board update from server
+                continue;
             }
-            continue; // Wait for server to validate and send board update
-            
+        } else if ((mode >= 2 && mode <= 4) && current == PLAYER_B && isServer) {
+            // Server's bot turn
+            if (mode == 2) column = getEasyBotMove(board);
+            else if (mode == 3) column = getMediumMove(board, current);
+            else column = getHardMove(board, current);
+
+            input = column + 1;
+            printf("Bot plays column %d\n", input);
         } else if (current == remotePlayer && isServer) {
             // Server waiting for remote player (client) move
             printf("Waiting for remote player (Player %c) to make a move...\n", current);
-            
-            // Server waits for client's move
-            if (sendMoveRequest(socket, current) != 0) {
-                fprintf(stderr, "Failed to send move request\n");
-                return;
-            }
-            
-            if (receiveMoveResponse(socket, &column) != 0) {
+
+            if (receiveMove(socket, &column) != 0) {
                 fprintf(stderr, "Failed to receive move from remote player\n");
                 return;
             }
+
             input = column + 1;
             printf("Remote player plays column %d\n", input);
-            
-        } else if ((mode == 2 || mode == 3 || mode == 4) && current == PLAYER_B && isServer) {
-            // Bot's turn (only on server side, Player B is bot in bot modes)
-            if (mode == 2) {
-                column = getEasyBotMove(board);
-            } else if (mode == 3) {
-                column = getMediumMove(board, current);
-            } else {
-                column = getHardMove(board, current);
-            }
-            input = column + 1;
-            printf("Bot plays column %d\n", input);
-            
-        } else if (isServer) {
-            // Server's own turn (Player A)
-            printf("Your turn (Player %c). Enter column (1-%d): ", current, COLS);
-            fflush(stdout);
-
-            int read = read_user_column();
-            if (read == -1) {
-                printf("\nEnd of input. Exiting game.\n");
-                return;
-            }
-            if (read == 0) {
-                printf("Invalid input. Please type a column number 1-%d and press Enter.\n", COLS);
-                continue;
-            }
-
-            input = read;
-            column = input - 1;
-        } else {
-            // Client waiting for server/bot move
-            printf("Waiting for other player's move...\n");
-            continue; // Loop back to receive board update
         }
 
         // Validate and apply move (server only)
@@ -330,22 +299,20 @@ void playNetworkGame(int mode, int socket, int isServer) {
             int gameWon = checkWin(board, current);
             int gameDraw = checkDraw(board);
 
-            // Send board update to client with CURRENT player (who just moved)
-            if (sendBoardUpdate(socket, board, current) != 0) {
-                fprintf(stderr, "Failed to send board update\n");
-                return;
+            // Send board update to client
+            if (!isServer || socket >= 0) {
+                if (sendBoardUpdate(socket, board, SWITCH_PLAYER(current)) != 0) {
+                    fprintf(stderr, "Failed to send board update\n");
+                    return;
+                }
             }
 
             if (gameWon) {
                 printBoard(board);
                 printf("Player %c wins!\n", current);
-                if (current == localPlayer) {
-                    printf("You win!\n");
-                } else if (current == PLAYER_B && mode >= 2 && mode <= 4) {
-                    printf("Bot wins!\n");
-                } else {
-                    printf("Remote player wins!\n");
-                }
+                if (current == localPlayer) printf("You win!\n");
+                else if ((mode >= 2 && mode <= 4) && current == PLAYER_B) printf("Bot wins!\n");
+                else printf("Remote player wins!\n");
                 return;
             }
 
