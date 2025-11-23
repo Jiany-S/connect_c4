@@ -13,8 +13,8 @@
 #define ROWS 6
 #define COLS 7
 #define EMPTY '.'
-#define PLAYER_A 'X'
-#define PLAYER_B 'O'
+#define PLAYER_A 'A'
+#define PLAYER_B 'B'
 
 #define MSG_BOARD_UPDATE 1
 #define MSG_MOVE_REQUEST 2
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
-    printf("Connected! You are Player O\n");
+    printf("Connected! You are Player B\n");
     printf("Waiting for game to start...\n\n");
     
     Board board;
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
         printBoard(board);
         
         if (currentPlayer == PLAYER_B) {
-            printf("Your turn (Player O). Enter column (1-%d): ", COLS);
+            printf("Your turn (Player B). Enter column (1-%d): ", COLS);
             fflush(stdout);
             
             int input = readColumn();
@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
         } else {
-            printf("Waiting for Player X to move...\n");
+            printf("Waiting for Player A to move...\n");
         }
     }
     
