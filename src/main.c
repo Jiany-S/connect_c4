@@ -10,80 +10,60 @@
 #include "bot_hard.h"
 #include "network.h"
 
-/* If compiled with -DMT_BUILD and -pthread, bot_hard will evaluate top-level moves
- * in parallel using pthreads. Use `make multithread` to build that version.
- */
-
-/* Read an integer from stdin.
- * Returns:
- *   >=1 : the integer read (user-facing column, 1..COLS)
- *    0  : input line did not contain a number (invalid)
- *   -1  : EOF reached (caller should treat as quit)
- */
 static int read_user_column(void) {
     char buf[64];
-    if (fgets(buf, sizeof buf, stdin) == NULL) return -1; // EOF
-    // trim leading spaces
+    if (fgets(buf, sizeof buf, stdin) == NULL) return -1;
     char *p = buf;
     while (*p == ' ' || *p == '\t') ++p;
     if (*p == '\n' || *p == '\0') return 0;
     char *endptr;
     long val = strtol(p, &endptr, 10);
-    if (endptr == p) return 0; // no number found
+    if (endptr == p) return 0;
     return (int) val;
 }
 
-void playGame(int mode) {
+void playGame(int mode, char startingPlayer) {
     Board board;
     initBoard(board);
-    char current = PLAYER_A;
+    char current = startingPlayer;
     int move_count = 0;
 
     while (1) {
         printBoard(board);
 
         int column;
-        int input = 0; // keep defined for error messages
+        int input = 0;
 
+        // Bot turn?
         if ((mode == 2 || mode == 3 || mode == 4) && current == PLAYER_B) {
-            // Bot's turn (automatic)
-            if (mode == 2) {
+            if (mode == 2)
                 column = getEasyBotMove(board);
-            } else if (mode == 3){
+            else if (mode == 3)
                 column = getMediumMove(board, current);
-            } else { // mode == 4
+            else
                 column = getHardMove(board, current);
-            }
+
             input = column + 1;
             printf("Bot plays column %d\n", input);
         } else {
-            // Human player's turn
             printf("Player %c's turn. Enter column (1-%d): ", current, COLS);
             fflush(stdout);
-
             int read = read_user_column();
             if (read == -1) {
-                // EOF (e.g., file ended when using redirected tests, or user Ctrl+D)
                 printf("\nEnd of input. Exiting game.\n");
                 return;
             }
-            if (read == 0) {
-                printf("Invalid input. Please type a column number 1-%d and press Enter.\n", COLS);
+            if (read == 0 || read < 1 || read > COLS) {
+                printf("Invalid input. Choose a number 1-%d.\n", COLS);
                 continue;
             }
-
             input = read;
-            column = input - 1; // convert to 0-based for dropChecker
+            column = input - 1;
         }
 
         int row = dropChecker(board, column, current);
         if (row == -1) {
-            // dropChecker returns -1 for invalid column or full column
-            if (!VALID_COLUMN(column)) {
-                printf("Column %d is out of range. Choose 1-%d.\n", input, COLS);
-            } else {
-                printf("Column %d is full or move invalid. Try another column.\n", input);
-            }
+            printf("Column full or invalid. Try again.\n");
             continue;
         }
 
@@ -101,7 +81,6 @@ void playGame(int mode) {
             return;
         }
 
-        // switch players and continue
         current = SWITCH_PLAYER(current);
     }
 }
@@ -119,43 +98,53 @@ int main(void) {
     printf("6. Network vs Bot (easy) - Host\n");
     printf("7. Network vs Bot (medium) - Host\n");
     printf("8. Network vs Bot (hard) - Host\n");
-    
-    if (scanf("%d", &mode) != 1) {
-        fprintf(stderr, "Invalid input for mode.\n");
+
+    if (scanf("%d", &mode) != 1 || mode < 1 || mode > 8) {
+        fprintf(stderr, "Invalid mode.\n");
         return 1;
     }
 
-    if (mode < 1 || mode > 8) {
-        fprintf(stderr, "Invalid mode. Please choose between 1 and 8.\n");
-        return 1;
-    }
-    
     int ch;
-    while ((ch = getchar()) != '\n' && ch != EOF) { /* discard */ }
+    while ((ch = getchar()) != '\n' && ch != EOF) {}
 
-    // Handle network modes
+    char startingPlayer = PLAYER_A;
+
+    // ONLY ask for starting player in local modes
+    if (mode >= 1 && mode <= 4) {
+        printf("\nWho should start first?\n");
+        printf("1. Player A (You)\n");
+        if (mode != 1) printf("2. Bot\n");
+        else printf("2. Player B\n");
+
+        printf("Enter choice: ");
+        int startChoice;
+        if (scanf("%d", &startChoice) == 1) {
+            if (startChoice == 2)
+                startingPlayer = PLAYER_B;
+        }
+        while ((ch = getchar()) != '\n' && ch != EOF) {}
+    }
+
     if (mode >= 5 && mode <= 8) {
         int socket;
         int port = 8888;
-        
+
         socket = startServer(port);
         if (socket < 0) {
             fprintf(stderr, "Failed to start server\n");
             return 1;
         }
-        
-        // Determine bot difficulty
-        int botMode = 1; // Player vs Player by default
-        if (mode == 6) botMode = 2; // Easy bot
-        else if (mode == 7) botMode = 3; // Medium bot
-        else if (mode == 8) botMode = 4; // Hard bot
-        
+
+        int botMode = 1;
+        if (mode == 6) botMode = 2;
+        else if (mode == 7) botMode = 3;
+        else if (mode == 8) botMode = 4;
+
         playNetworkGame(botMode, socket, 1);
         closeConnection(socket);
     } else {
-        // Local game modes
-        playGame(mode);
+        playGame(mode, startingPlayer);
     }
-    
+
     return 0;
 }
