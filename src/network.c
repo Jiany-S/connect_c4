@@ -173,7 +173,7 @@ int receiveMove(int socket) {
     return buffer[1];
 }
 
-static int receiveBoardUpdate(int socket, Board board, char *currentPlayer) {
+int receiveBoardUpdate(int socket, Board board, char *currentPlayer) {
     char buffer[ROWS * COLS + 10];
     int received = recv(socket, buffer, ROWS * COLS + 2, 0);
     
