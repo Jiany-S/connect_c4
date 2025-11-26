@@ -22,7 +22,10 @@ int sendMoveRequest(int socket, char player);
 int receiveMoveResponse(int socket, int *column);
 int sendMove(int socket, int column);
 int receiveMove(int socket);
+int receiveBoardUpdate(int socket, Board board, char *currentPlayer);
 void closeConnection(int socket);
-void playNetworkGame(int mode, int socket, int isServer);
+
+/* Updated to allow the host/user to choose who starts first */
+void playNetworkGame(int mode, int socket, int isServer, char startingPlayer);
 
 #endif
