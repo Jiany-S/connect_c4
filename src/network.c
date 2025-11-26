@@ -210,17 +210,17 @@ static int read_user_column(void) {
     return (int) val;
 }
 
-void playNetworkGame(int mode, int socket, int isServer) {
+void playNetworkGame(int mode, int socket, int isServer, char startingPlayer) {
     Board board;
     initBoard(board);
-    char current = PLAYER_A;
+    char current = startingPlayer;
     int move_count = 0;
 
     char localPlayer = isServer ? PLAYER_A : PLAYER_B;
     char remotePlayer = isServer ? PLAYER_B : PLAYER_A;
 
     while (1) {
-        // Client waits for board update at the start of turn
+        // Client waits for board update at start of turn
         if (!isServer) {
             if (receiveBoardUpdate(socket, board, &current) != 0) {
                 fprintf(stderr, "Lost connection to server\n");
@@ -328,4 +328,3 @@ void playNetworkGame(int mode, int socket, int isServer) {
         }
     }
 }
-
